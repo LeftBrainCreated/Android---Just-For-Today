@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     Date mCleanDate;
     String mCleanDateString;
+    Boolean mFirstOpenToday;
     public static Boolean dialogVisible = false;
 
     @Override
@@ -64,19 +65,28 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         //If dialog is open when config changes, we don't want to open another one...
         outState.putBoolean(getString(R.string.MainActivity_dialog_open_bundle_key), dialogVisible);
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        setLastOpenSharedPref();
+    }
 
+    private boolean isFirstOpenToday() {
+        Calendar today = Calendar.getInstance();
+        DateFormat dateFormat = DateFormat.getDateInstance();
+
+        String lastOpen = getSharedPrefStringByKey(getString(R.string.last_open_key), "");
+        String strTemp = dateFormat.format(today.getTime()).toString();
+
+        return (!lastOpen.equals(strTemp));
     }
 
     private void setmCleanDate() {
-        SharedPreferences sharedPreferences =
-                getSharedPreferences(
-                        getString(R.string.shared_pref_key),
-                        Context.MODE_PRIVATE
-                );
 
         //CleanDate is stored as SharedPref
-        mCleanDateString = sharedPreferences.getString(getString(R.string.clean_date_key), "");
+        mCleanDateString = getSharedPrefStringByKey(getString(R.string.clean_date_key), "");
 
         if (mCleanDateString.equals("")){
             showDatePickerDialog(findViewById(R.id.textViewCleanTime));
@@ -108,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         txtViewCleanDate.setText(mCleanDateString);
 
         //Add cleanDate to shared Prefs
-        setCleanDateSharedPref();
+        setSharedPrefStringByKey(getString(R.string.clean_date_key), mCleanDateString);
 
         setCleanTime();
     }
@@ -116,20 +126,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     private void setLastOpenSharedPref() {
 
         Calendar today = Calendar.getInstance();
+        DateFormat dateFormat = DateFormat.getDateInstance();
 
+        setSharedPrefStringByKey(
+                getString(R.string.last_open_key),
+                dateFormat.format(today.getTime()).toString()
+        );
 
-    }
-
-    private void setCleanDateSharedPref(){
-        SharedPreferences sharedPreferences =
-                getSharedPreferences(
-                        getString(R.string.shared_pref_key),
-                        Context.MODE_PRIVATE
-                );
-
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(getString(R.string.clean_date_key), mCleanDateString);
-        editor.apply();
     }
 
     public static java.util.Date getDateFromDatePicker(DatePicker datePicker){
@@ -232,7 +235,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             e.printStackTrace();
         }
 
-        //Launch DailyMeditation Activity
+        if (isFirstOpenToday()) {
+            Intent intent = new Intent(MainActivity.this, DailyBreadActivity.class);
+            startActivity(intent);
+            Snackbar.make(findViewById(R.id.textViewCleanTime), "First Open Today", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        }
     }
 
     private int keyTagColor(int daysFullCount, int yearsClean, int monthsClean) {
@@ -300,4 +308,29 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             }
         });
     }
+
+    private String getSharedPrefStringByKey(String prefKey, String defaultReturn) {
+
+        SharedPreferences sharedPreferences =
+                getSharedPreferences(
+                        getString(R.string.shared_pref_key),
+                        Context.MODE_PRIVATE
+                );
+
+        return sharedPreferences.getString(prefKey, defaultReturn);
+
+    }
+
+    private void setSharedPrefStringByKey(String prefKey, String value) {
+        SharedPreferences sharedPreferences =
+                getSharedPreferences(
+                        getString(R.string.shared_pref_key),
+                        Context.MODE_PRIVATE
+                );
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(prefKey, value);
+        editor.apply();
+    }
+
 }
