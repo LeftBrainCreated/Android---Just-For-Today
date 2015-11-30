@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="oneDayWhite">#ffffff</color>
+    <color name="thirtyDaysOrange">#ff9901</color>
+    <color name="sixtyDaysGreen">#386c34</color>
+    <color name="ninetyDaysRed">#da232c</color>
+    <color name="sixMonthsBlue">#282dc7</color>
+    <color name="nineMonthsYellow">#d2bb0c</color>
+    <color name="oneYearGlowInTheDark">#c0c2c1</color>
+    <color name="eighteenMonthsGrey">#717272</color>
+    <color name="multipleYearsBlack">#031e1e</color>
+
+    <color name="black_overlay">#66000000</color>
+
+</resources>
