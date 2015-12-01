@@ -191,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             daysClean = (int) (diff / (24 * 60 * 60 * 1000));
 
 //Old Code...
+//
 //            yearsClean = today.get(Calendar.YEAR) - calendarCleanDate.get(Calendar.YEAR);
 //
 //            //A bit of finagling to get cleanTime correct
