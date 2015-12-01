@@ -9,10 +9,10 @@
     <string name="DailyBreadActivity_string_html_bundle_key">daily_bread_activity_string_html_bundle_key</string>
 
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="date_picker_dialog_title">Enter Your Clean Date</string>
 
     <string name="title_activity_daily_bread">DailyBreadActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="drawer_open">Slider Menu Opened</string>
+    <string name="drawer_close">Slider Menu Closed</string>
+
 </resources>

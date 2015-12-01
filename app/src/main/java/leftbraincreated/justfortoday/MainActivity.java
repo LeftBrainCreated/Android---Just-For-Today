@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     Date mCleanDate;
     String mCleanDateString;
+    Boolean mFirstOpenToday;
     public static Boolean dialogVisible = false;
 
     @Override
@@ -64,19 +65,28 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         //If dialog is open when config changes, we don't want to open another one...
         outState.putBoolean(getString(R.string.MainActivity_dialog_open_bundle_key), dialogVisible);
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        setLastOpenSharedPref();
+    }
 
+    private boolean isFirstOpenToday() {
+        Calendar today = Calendar.getInstance();
+        DateFormat dateFormat = DateFormat.getDateInstance();
+
+        String lastOpen = getSharedPrefStringByKey(getString(R.string.last_open_key), "");
+        String strTemp = dateFormat.format(today.getTime()).toString();
+
+        return (!lastOpen.equals(strTemp));
     }
 
     private void setmCleanDate() {
-        SharedPreferences sharedPreferences =
-                getSharedPreferences(
-                        getString(R.string.shared_pref_key),
-                        Context.MODE_PRIVATE
-                );
 
         //CleanDate is stored as SharedPref
-        mCleanDateString = sharedPreferences.getString(getString(R.string.clean_date_key), "");
+        mCleanDateString = getSharedPrefStringByKey(getString(R.string.clean_date_key), "");
 
         if (mCleanDateString.equals("")){
             showDatePickerDialog(findViewById(R.id.textViewCleanTime));
@@ -108,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         txtViewCleanDate.setText(mCleanDateString);
 
         //Add cleanDate to shared Prefs
-        setCleanDateSharedPref();
+        setSharedPrefStringByKey(getString(R.string.clean_date_key), mCleanDateString);
 
         setCleanTime();
     }
@@ -116,20 +126,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     private void setLastOpenSharedPref() {
 
         Calendar today = Calendar.getInstance();
+        DateFormat dateFormat = DateFormat.getDateInstance();
 
+        setSharedPrefStringByKey(
+                getString(R.string.last_open_key),
+                dateFormat.format(today.getTime()).toString()
+        );
 
-    }
-
-    private void setCleanDateSharedPref(){
-        SharedPreferences sharedPreferences =
-                getSharedPreferences(
-                        getString(R.string.shared_pref_key),
-                        Context.MODE_PRIVATE
-                );
-
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(getString(R.string.clean_date_key), mCleanDateString);
-        editor.apply();
     }
 
     public static java.util.Date getDateFromDatePicker(DatePicker datePicker){
@@ -154,41 +157,69 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
             Calendar today = Calendar.getInstance();
 
-            int yearsClean;
-            int monthsClean;
+            int yearsClean = 0;
+            int monthsClean = 0;
             int daysClean;
             Calendar tmpCalender;
 
-            yearsClean = today.get(Calendar.YEAR) - calendarCleanDate.get(Calendar.YEAR);
+            int i = 0;
 
-            //A bit of finagling to get cleanTime correct
-            if (today.get(Calendar.MONTH) > calendarCleanDate.get(Calendar.MONTH)) {
-                monthsClean = today.get(Calendar.MONTH) - calendarCleanDate.get(Calendar.MONTH);
-            } else if (today.get(Calendar.MONTH) == calendarCleanDate.get(Calendar.MONTH)) {
-                if (yearsClean > 0 && (today.get(Calendar.DATE) < calendarCleanDate.get(Calendar.DATE))) {
-                    monthsClean = 11;
-                    yearsClean = yearsClean - 1;
-                } else {
-                    monthsClean = 0;
+            tmpCalender = Calendar.getInstance();
+            tmpCalender.set(
+                    calendarCleanDate.get(Calendar.YEAR),
+                    calendarCleanDate.get(Calendar.MONTH) + 1,
+                    calendarCleanDate.get(Calendar.DATE)
+            );
+
+            if (tmpCalender.before(today)) {
+                //More than 1 month
+                while (tmpCalender.before(today)) {
+                    tmpCalender.add(Calendar.MONTH, 1);
+                    i++;
                 }
-            } else {
-                monthsClean = (today.get(Calendar.MONTH) + 12) - (calendarCleanDate.get(Calendar.MONTH));
-                yearsClean = yearsClean - 1;
+                //i = #Months
+                while (i > 12) {
+                    yearsClean++;
+                    i = i - 12;
+                }
+                monthsClean = i;
             }
 
-            if (today.get(Calendar.DATE) >= calendarCleanDate.get(Calendar.DATE)) {
-                daysClean = today.get(Calendar.DATE) - calendarCleanDate.get(Calendar.DATE);
-            } else {
-                tmpCalender = Calendar.getInstance();
-                tmpCalender.set(
-                        calendarCleanDate.get(Calendar.YEAR),
-                        calendarCleanDate.get(Calendar.MONTH) + 1,
-                        today.get(Calendar.DATE)
-                );
-                Long diff = tmpCalender.getTimeInMillis() - calendarCleanDate.getTimeInMillis();
-                daysClean = (int) (diff / (24 * 60 * 60 * 1000));
-            }
+            tmpCalender.add(Calendar.MONTH, -1);
 
+            Long diff = today.getTimeInMillis() - tmpCalender.getTimeInMillis();
+            daysClean = (int) (diff / (24 * 60 * 60 * 1000));
+
+//Old Code...
+//            yearsClean = today.get(Calendar.YEAR) - calendarCleanDate.get(Calendar.YEAR);
+//
+//            //A bit of finagling to get cleanTime correct
+//            if (today.get(Calendar.MONTH) > calendarCleanDate.get(Calendar.MONTH)) {
+//                monthsClean = today.get(Calendar.MONTH) - calendarCleanDate.get(Calendar.MONTH);
+//            } else if (today.get(Calendar.MONTH) == calendarCleanDate.get(Calendar.MONTH)) {
+//                if (yearsClean > 0 && (today.get(Calendar.DATE) < calendarCleanDate.get(Calendar.DATE))) {
+//                    monthsClean = 11;
+//                    yearsClean = yearsClean - 1;
+//                } else {
+//                    monthsClean = 0;
+//                }
+//            } else {
+//                monthsClean = (today.get(Calendar.MONTH) + 12) - (calendarCleanDate.get(Calendar.MONTH));
+//                yearsClean = yearsClean - 1;
+//            }
+//
+//            if (today.get(Calendar.DATE) >= calendarCleanDate.get(Calendar.DATE)) {
+//                daysClean = today.get(Calendar.DATE) - calendarCleanDate.get(Calendar.DATE);
+//            } else {
+//                tmpCalender = Calendar.getInstance();
+//                tmpCalender.set(
+//                        calendarCleanDate.get(Calendar.YEAR),
+//                        calendarCleanDate.get(Calendar.MONTH) + 1,
+//                        today.get(Calendar.DATE)
+//                );
+//                Long diff = tmpCalender.getTimeInMillis() - calendarCleanDate.getTimeInMillis();
+//                daysClean = (int) (diff / (24 * 60 * 60 * 1000));
+//            }
             String cleanTime = "";
             if (yearsClean > 0) {
                 if (yearsClean == 1) {
@@ -232,7 +263,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             e.printStackTrace();
         }
 
-        //Launch DailyMeditation Activity
+        if (isFirstOpenToday()) {
+            Intent intent = new Intent(MainActivity.this, DailyBreadActivity.class);
+            startActivity(intent);
+            Snackbar.make(findViewById(R.id.textViewCleanTime), "First Open Today", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        }
     }
 
     private int keyTagColor(int daysFullCount, int yearsClean, int monthsClean) {
@@ -300,4 +336,29 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             }
         });
     }
+
+    private String getSharedPrefStringByKey(String prefKey, String defaultReturn) {
+
+        SharedPreferences sharedPreferences =
+                getSharedPreferences(
+                        getString(R.string.shared_pref_key),
+                        Context.MODE_PRIVATE
+                );
+
+        return sharedPreferences.getString(prefKey, defaultReturn);
+
+    }
+
+    private void setSharedPrefStringByKey(String prefKey, String value) {
+        SharedPreferences sharedPreferences =
+                getSharedPreferences(
+                        getString(R.string.shared_pref_key),
+                        Context.MODE_PRIVATE
+                );
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(prefKey, value);
+        editor.apply();
+    }
+
 }
