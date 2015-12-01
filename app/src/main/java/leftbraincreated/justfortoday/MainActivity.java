@@ -157,41 +157,69 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
             Calendar today = Calendar.getInstance();
 
-            int yearsClean;
-            int monthsClean;
+            int yearsClean = 0;
+            int monthsClean = 0;
             int daysClean;
             Calendar tmpCalender;
 
-            yearsClean = today.get(Calendar.YEAR) - calendarCleanDate.get(Calendar.YEAR);
+            int i = 0;
 
-            //A bit of finagling to get cleanTime correct
-            if (today.get(Calendar.MONTH) > calendarCleanDate.get(Calendar.MONTH)) {
-                monthsClean = today.get(Calendar.MONTH) - calendarCleanDate.get(Calendar.MONTH);
-            } else if (today.get(Calendar.MONTH) == calendarCleanDate.get(Calendar.MONTH)) {
-                if (yearsClean > 0 && (today.get(Calendar.DATE) < calendarCleanDate.get(Calendar.DATE))) {
-                    monthsClean = 11;
-                    yearsClean = yearsClean - 1;
-                } else {
-                    monthsClean = 0;
+            tmpCalender = Calendar.getInstance();
+            tmpCalender.set(
+                    calendarCleanDate.get(Calendar.YEAR),
+                    calendarCleanDate.get(Calendar.MONTH) + 1,
+                    calendarCleanDate.get(Calendar.DATE)
+            );
+
+            if (tmpCalender.before(today)) {
+                //More than 1 month
+                while (tmpCalender.before(today)) {
+                    tmpCalender.add(Calendar.MONTH, 1);
+                    i++;
                 }
-            } else {
-                monthsClean = (today.get(Calendar.MONTH) + 12) - (calendarCleanDate.get(Calendar.MONTH));
-                yearsClean = yearsClean - 1;
+                //i = #Months
+                while (i > 12) {
+                    yearsClean++;
+                    i = i - 12;
+                }
+                monthsClean = i;
             }
 
-            if (today.get(Calendar.DATE) >= calendarCleanDate.get(Calendar.DATE)) {
-                daysClean = today.get(Calendar.DATE) - calendarCleanDate.get(Calendar.DATE);
-            } else {
-                tmpCalender = Calendar.getInstance();
-                tmpCalender.set(
-                        calendarCleanDate.get(Calendar.YEAR),
-                        calendarCleanDate.get(Calendar.MONTH) + 1,
-                        today.get(Calendar.DATE)
-                );
-                Long diff = tmpCalender.getTimeInMillis() - calendarCleanDate.getTimeInMillis();
-                daysClean = (int) (diff / (24 * 60 * 60 * 1000));
-            }
+            tmpCalender.add(Calendar.MONTH, -1);
 
+            Long diff = today.getTimeInMillis() - tmpCalender.getTimeInMillis();
+            daysClean = (int) (diff / (24 * 60 * 60 * 1000));
+
+//Old Code...
+//            yearsClean = today.get(Calendar.YEAR) - calendarCleanDate.get(Calendar.YEAR);
+//
+//            //A bit of finagling to get cleanTime correct
+//            if (today.get(Calendar.MONTH) > calendarCleanDate.get(Calendar.MONTH)) {
+//                monthsClean = today.get(Calendar.MONTH) - calendarCleanDate.get(Calendar.MONTH);
+//            } else if (today.get(Calendar.MONTH) == calendarCleanDate.get(Calendar.MONTH)) {
+//                if (yearsClean > 0 && (today.get(Calendar.DATE) < calendarCleanDate.get(Calendar.DATE))) {
+//                    monthsClean = 11;
+//                    yearsClean = yearsClean - 1;
+//                } else {
+//                    monthsClean = 0;
+//                }
+//            } else {
+//                monthsClean = (today.get(Calendar.MONTH) + 12) - (calendarCleanDate.get(Calendar.MONTH));
+//                yearsClean = yearsClean - 1;
+//            }
+//
+//            if (today.get(Calendar.DATE) >= calendarCleanDate.get(Calendar.DATE)) {
+//                daysClean = today.get(Calendar.DATE) - calendarCleanDate.get(Calendar.DATE);
+//            } else {
+//                tmpCalender = Calendar.getInstance();
+//                tmpCalender.set(
+//                        calendarCleanDate.get(Calendar.YEAR),
+//                        calendarCleanDate.get(Calendar.MONTH) + 1,
+//                        today.get(Calendar.DATE)
+//                );
+//                Long diff = tmpCalender.getTimeInMillis() - calendarCleanDate.getTimeInMillis();
+//                daysClean = (int) (diff / (24 * 60 * 60 * 1000));
+//            }
             String cleanTime = "";
             if (yearsClean > 0) {
                 if (yearsClean == 1) {
